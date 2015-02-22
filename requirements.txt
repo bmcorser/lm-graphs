@@ -1,2 +1,5 @@
 -e hg+ssh://hg@bitbucket.org/gleb_zhulik/py3sensors#egg=py3sensors
 sqlalchemy
+pandas
+plotly
+scipy
