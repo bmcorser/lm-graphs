@@ -44,7 +44,6 @@ def record():
                     reading = models.Reading()
                     reading.datetime = datetime.datetime.now()
                     reading_value = sensor_struct.get_value()
-                    print(key, reading_value)
                     reading.value = reading_value
                     reading.sensor_id = sensor_id
                     S.add(reading)
