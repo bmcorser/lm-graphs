@@ -18,8 +18,7 @@ class Sensor(Base):
     id = sa.Column(sa.Integer, primary_key=True)
     chip_id = sa.Column(sa.Integer, sa.ForeignKey('chip.id'))
     label = sa.Column(sa.String)
-
-    chip = sa.orm.relationship(Chip, backref=sa.orm.backref('sensors'))
+    chip = sa.Column(sa.String)
 
 
 class Reading(Base):
@@ -28,3 +27,4 @@ class Reading(Base):
     sensor_id = sa.Column(sa.Integer, sa.ForeignKey('sensor.id'))
     sensor = sa.orm.relationship(Sensor, backref=sa.orm.backref('readings'))
     value = sa.Column(sa.Float)
+    datetime = sa.Column(sa.DateTime)

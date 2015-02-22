@@ -7,7 +7,7 @@ def engine():
 
 
 def session():
-    return sa.orm.sessionmaker(bind=engine())()
+    return sa.orm.sessionmaker(bind=engine(), autoflush=False)()
 
 
 def get(S, model, cols, struct):
@@ -18,17 +18,13 @@ def get(S, model, cols, struct):
             col_values[col] = str(value, 'utf-8')
         else:
             col_values[col] = str(value)
-    print(col_values)
     Q = S.query(model).filter_by(**col_values)
     try:
         return Q.one()
     except sa.orm.exc.NoResultFound:
         instance = model()
         for col, value in col_values.items():
-            print(value)
             setattr(instance, col, value)
-        S.add(instance)
-        S.flush()
         return instance
 
 

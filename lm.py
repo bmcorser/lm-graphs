@@ -1,3 +1,4 @@
+import datetime
 import time
 import sqla
 import models
@@ -15,11 +16,13 @@ def create_models():
     try:
         for chip_struct in sensors.iter_detected_chips():
             chip = sqla.get(S, models.Chip, ['addr', 'bus', 'path', 'prefix'], chip_struct)
+            S.add(chip)
+            S.flush()
             for sensor_struct in chip_struct:
-                sensor = sqla.get(S, models.Sensor, ['label'], sensor_struct)
-                sensor.chip = chip
+                sensor = sqla.get(S, models.Sensor, ['chip', 'label'], sensor_struct)
+                sensor.chip_id = chip.id
                 S.add(sensor)
-        S.flush()
+                S.flush()
         S.commit()
     finally:
         sensors.cleanup()
@@ -32,11 +35,11 @@ def record():
             for chip_struct in sensors.iter_detected_chips():
                 chip = sqla.get(S, models.Chip, ['addr', 'bus', 'path', 'prefix'], chip_struct)
                 for sensor_struct in chip_struct:
-                    sensor = sqla.get(S, models.Sensor, ['label'], sensor_struct)
-                    sensor.chip = chip
+                    sensor = sqla.get(S, models.Sensor, ['chip', 'label'], sensor_struct)
+                    sensor.chip_id = chip.id
                     reading = models.Reading()
+                    reading.datetime = datetime.datetime.now()
                     reading_value = sensor_struct.get_value()
-                    print(sensor.label, reading_value)
                     reading.value = reading_value
                     reading.sensor = sensor
                     S.add(reading)
