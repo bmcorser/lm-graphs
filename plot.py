@@ -1,23 +1,37 @@
 import operator
 import uuid
-import sqla, models, plotly
+import pandas
+import plotly
 from scipy import signal
 
-S = sqla.session()
-P = plotly.plotly
-
-readings = (S.query(models.Reading.datetime, models.Reading.value)
-             .filter(models.Reading.sensor_id == 13)
-             .order_by(models.Reading.datetime)
-             .all())
+import sqla
+import models
 
 
 def attrs(name, lst):
     return list(map(operator.attrgetter(name), lst))
 
-values = attrs('value', readings)
-b, a = signal.butter(2, 0.0006)
-filtered_values = signal.lfilter(b, a, values)
-plotly_dict = dict(x=attrs('datetime', readings), y=filtered_values)
 
-print(P.plot([plotly_dict], uuid.uuid4(), auto_open=False))
+def calls(name, lst):
+    return list(map(operator.methodcaller(name), lst))
+
+S = sqla.session()
+P = plotly.plotly
+
+sensors = (S.query(models.Sensor)
+            .filter(models.Sensor.id.in_([13, 14, 18]))
+            .all())
+
+plotly_dicts = []
+for sensor in sensors:
+    b, a = signal.butter(2, 0.0006)
+    ts = (pandas.Series.from_array(signal.lfilter(b, a, attrs('value', sensor.readings)),
+                                   index=attrs('datetime', sensor.readings))
+                       .resample('5min', how='mean'))
+    plotly_dicts.append({
+        'name': "{0}: {1}".format(sensor.chip, sensor.label),
+        'x': calls('to_datetime', ts.index)[8:],
+        'y': ts.values[8:],
+    })
+
+print(P.plot(plotly_dicts, uuid.uuid4(), auto_open=False))
